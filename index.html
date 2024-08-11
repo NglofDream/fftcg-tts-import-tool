@@ -6,12 +6,12 @@
     <title>JSON Processing</title>
 </head>
 <body>
-    <label for="deckId">Enter Deck ID:</label>
-    <input type="text" id="deckId" placeholder="Enter deck ID">
-    <button id="fetchButton">Fetch Deck Data</button>
+    <label for="deckId">Enter Deck ID / Website link:</label>
+    <input type="text" id="deckId">
+    <button id="fetchButton">Download Deck</button>
 
     <h2>Deck Data:</h2>
-    <pre id="deck-data">Please enter a Deck ID and click "Fetch Deck Data".</pre>
+    <pre id="deck-data">Please enter a Deck ID and click "Download Deck".</pre>
 
     <script>
         async function fetchJSON(url) {
