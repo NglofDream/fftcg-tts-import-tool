@@ -29,17 +29,17 @@
             URL.revokeObjectURL(url);
         }
 
-        async function processData(existingFileUrl) {
+        async function processData(deckData) {
             try {
                 const githubBaseUrl = 'https://raw.githubusercontent.com/nglofdream/test/main/';
                 const templateFileUrl = `${githubBaseUrl}template.json`;
                 const ttsdeckFileUrl = `${githubBaseUrl}ttsdeck.json`;
 
-                const existingData = await fetchJSON(existingFileUrl);
+                // Only keep the "cards" data from the fetched deck data
+                const dataList = deckData.cards || [];
                 const templateData = await fetchJSON(templateFileUrl);
                 const ttsdeckData = await fetchJSON(ttsdeckFileUrl);
 
-                let dataList = existingData.cards || [];
                 let newDataList = [];
 
                 dataList.forEach(item => {
@@ -131,9 +131,12 @@
                 })
                 .then(data => {
                     const pre = document.getElementById('deck-data');
-                    pre.textContent = JSON.stringify(data, null, 2); // Display deck data
 
-                    processData(url); // Process the data and save the JSON file
+                    // Remove everything before "cards"
+                    const cardsData = { cards: data.cards };
+                    pre.textContent = JSON.stringify(cardsData, null, 2); // Display only the cards data
+
+                    processData(cardsData); // Process the "cards" data
                 })
                 .catch(error => {
                     console.error('There was a problem with the fetch operation:', error);
