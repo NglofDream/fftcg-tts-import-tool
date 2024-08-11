@@ -10,7 +10,6 @@
     <h2>Deck Data:</h2>
     <pre id="deck-data">Please enter a Deck ID or URL and click "Download Deck".</pre>
 
-
     <label for="deckId">Enter Deck ID or URL:</label>
     <input type="text" id="deckId" placeholder="Enter deck ID or URL">
     <button id="fetchButton">Download Deck</button>
@@ -127,7 +126,9 @@
                 ttsdeckData.ObjectStates[0].DeckIDs = deckIds;
                 ttsdeckData.ObjectStates[0].ContainedObjects = deck;
 
-                saveJSON(ttsdeckData, 'deck.json');
+                // Use deck name for filename
+                const filename = `${deckData.name || 'deck'}.json`;
+                saveJSON(ttsdeckData, filename);
             } catch (error) {
                 console.error('Error processing data:', error);
             }
@@ -148,8 +149,6 @@
                     return response.json();
                 })
                 .then(data => {
-                    const cardsData = { cards: data.cards.map(item => item.card) };
-
                     processData(data);
                 })
                 .catch(error => {
