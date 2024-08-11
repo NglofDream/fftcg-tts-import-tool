@@ -9,141 +9,154 @@
     <h1>JSON File Processor</h1>
     <p>Process JSON files from your GitHub project.</p>
     <button id="processFiles">Process Files</button>
+    <a id="downloadLink" style="display:none;">Download Processed JSON</a>
 
     <script>
-        const githubBaseUrl = 'https://raw.githubusercontent.com/nglofdream/test/main/';
+// Helper function to fetch and parse JSON files
+async function fetchJsonFile(url) {
+    const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
+    }
+    return response.json();
+}
 
-        const existingFileUrl = `${githubBaseUrl}existing_data.json`;
-        const templateFileUrl = `${githubBaseUrl}template.json`;
-        const ttsdeckFileUrl = `${githubBaseUrl}ttsdeck.json`;
+// Function to create and download a JSON file
+function downloadJsonFile(content, filename) {
+    const blob = new Blob([JSON.stringify(content, null, 4)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
 
-        document.getElementById('processFiles').addEventListener('click', async () => {
-            try {
-                const existingData = await fetchJsonFile(existingFileUrl);
-                const templateData = await fetchJsonFile(templateFileUrl);
-                const ttsdeckData = await fetchJsonFile(ttsdeckFileUrl);
+// Custom sort function for the cards
+function customKey(card) {
+    let serialNumber = card.serial_number;
+    if (serialNumber.startsWith("PR-")) {
+        serialNumber = "99" + serialNumber.slice(2);  // Change "PR-" to "99"
+    }
 
-                const dataList = existingData.cards || [];
-                const templateList = templateData.ObjectStates || [];
+    if (serialNumber.includes('-')) {
+        const [prefix, number] = serialNumber.split('-');
+        return [parseInt(prefix), parseInt(number)];
+    } else {
+        return [Infinity, parseInt(serialNumber)];  // In case there's no prefix, put it at the end
+    }
+}
 
-                const sortedCards = dataList.sort(customKey);
+document.getElementById('processFiles').addEventListener('click', async () => {
+    const githubBaseUrl = 'https://raw.githubusercontent.com/nglofdream/test/main/';
 
-                existingData.cards = sortedCards;
+    const existingUrl = `${githubBaseUrl}existing_data.json`;
+    const templateUrl = `${githubBaseUrl}template.json`;
+    const ttsdeckUrl = `${githubBaseUrl}ttsdeck.json`;
 
-                const startUrl = "https://storage.googleapis.com/ffdecks-card-images/";
-                const endUrl = "_eg.jpg";
-                const new_data_list = [];
+    try {
+        const existingData = await fetchJsonFile(existingUrl);
+        const templateData = await fetchJsonFile(templateUrl);
+        const ttsdeckData = await fetchJsonFile(ttsdeckUrl);
 
-                sortedCards.forEach(item => {
-                    let rarity = item.rarity || "";
-                    if (rarity === "Promo") {
-                        rarity = "";
-                    }
+        const dataList = existingData.cards || [];
+        const sortedCards = dataList.sort(customKey);
 
-                    const newItem = {
-                        "Nickname": item.name,
-                        "FaceURL": `${startUrl}${item.serial_number}${rarity.charAt(0)}${endUrl}`,
-                        "Description": item.abilities ? item.abilities.join(', ') : ''
-                    };
-                    new_data_list.push(newItem);
-                });
+        existingData.cards = sortedCards;
 
-                const deck = [];
-                const deckids = [];
-                const ids = 554;
+        const startUrl = "https://storage.googleapis.com/ffdecks-card-images/";
+        const endUrl = "_eg.jpg";
+        const new_data_list = [];
 
-                new_data_list.forEach((item, i) => {
-                    const temporaryDeckcode = {
-                        "FaceURL": item.FaceURL,
-                        "BackURL": "http://cloud-3.steamusercontent.com/ugc/948455238665576576/85063172B8C340602E8D6C783A457122F53F7843/",
-                        "NumWidth": 1,
-                        "NumHeight": 1,
-                        "BackIsHidden": "true",
-                        "UniqueBack": "false",
-                        "Type": 0
-                    };
-
-                    const temporaryCardcode = {
-                        "Name": "CardCustom",
-                        "Transform": {
-                            "posX": 42.494194,
-                            "posY": 0.989706635,
-                            "posZ": 10.5498743,
-                            "rotX": 359.7435,
-                            "rotY": 179.999451,
-                            "rotZ": -0.00222716271,
-                            "scaleX": 2.17791772,
-                            "scaleY": 1.0,
-                            "scaleZ": 2.17791772
-                        },
-                        "Nickname": item.Nickname,
-                        "Description": item.Description,
-                        "GMNotes": "",
-                        "AltLookAngle": { "x": 0.0, "y": 0.0, "z": 0.0 },
-                        "ColorDiffuse": { "r": 0.713235259, "g": 0.713235259, "b": 0.713235259 },
-                        "LayoutGroupSortIndex": 0,
-                        "Value": 0,
-                        "Locked": "false",
-                        "Grid": "true",
-                        "Snap": "true",
-                        "IgnoreFoW": "false",
-                        "MeasureMovement": "false",
-                        "DragSelectable": "true",
-                        "Autoraise": "true",
-                        "Sticky": "true",
-                        "Tooltip": "true",
-                        "GridProjection": "false",
-                        "HideWhenFaceDown": "true",
-                        "Hands": "true",
-                        "CardID": (ids + i) * 100,
-                        "SidewaysCard": "false",
-                        "CustomDeck": {
-                            [ids + i]: temporaryDeckcode
-                        },
-                        "LuaScript": "",
-                        "LuaScriptState": "",
-                        "XmlUI": ""
-                    };
-                    deckids.push((ids + i) * 100);
-                    deck.push(temporaryCardcode);
-                });
-
-                deck.forEach((item, index) => {
-                    ttsdeckData.ObjectStates[0].CustomDeck[ids + index] = item;
-                });
-
-                ttsdeckData.ObjectStates[0].DeckIDs = deckids;
-                ttsdeckData.ObjectStates[0].ContainedObjects = deck;
-
-                const jsonContent = JSON.stringify(ttsdeckData, null, 4);
-                downloadJsonFile(jsonContent, 'deck.json');
-            } catch (error) {
-                console.error('Error processing files:', error);
-                alert('An error occurred while processing the files.');
+        sortedCards.forEach(item => {
+            let rarity = item.rarity || "";
+            if (rarity === "Promo") {
+                rarity = "";
             }
+
+            const newItem = {
+                "Nickname": item.name,
+                "FaceURL": `${startUrl}${item.serial_number}${rarity.charAt(0)}${endUrl}`,
+                "Description": item.abilities ? item.abilities.join(', ') : ''
+            };
+            new_data_list.push(newItem);
         });
 
-        function customKey(card) {
-            let serial_number = card.serial_number;
-            if (serial_number.startsWith("PR-")) {
-                serial_number = "99" + serial_number.slice(2);  // Change "PR-" to "99"
-            }
+        const deck = [];
+        const deckids = [];
+        const ids = 554;
 
-            if (serial_number.includes('-')) {
-                const [prefix, number] = serial_number.split('-');
-                return [parseInt(prefix), parseInt(number)];
-            } else {
-                return [Infinity, parseInt(serial_number)];  // In case there's no prefix, put it at the end
-            }
-        }
+        new_data_list.forEach((item, i) => {
+            const temporaryDeckcode = {
+                "FaceURL": item.FaceURL,
+                "BackURL": "http://cloud-3.steamusercontent.com/ugc/948455238665576576/85063172B8C340602E8D6C783A457122F53F7843/",
+                "NumWidth": 1,
+                "NumHeight": 1,
+                "BackIsHidden": true,
+                "UniqueBack": false,
+                "Type": 0
+            };
 
-        async function fetchJsonFile(url) {
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
-            }
-            return response.json();
-        }
+            const temporaryCardcode = {
+                "Name": "CardCustom",
+                "Transform": {
+                    "posX": 42.494194,
+                    "posY": 0.989706635,
+                    "posZ": 10.5498743,
+                    "rotX": 359.7435,
+                    "rotY": 179.999451,
+                    "rotZ": -0.00222716271,
+                    "scaleX": 2.17791772,
+                    "scaleY": 1.0,
+                    "scaleZ": 2.17791772
+                },
+                "Nickname": item.Nickname,
+                "Description": item.Description,
+                "GMNotes": "",
+                "AltLookAngle": { "x": 0.0, "y": 0.0, "z": 0.0 },
+                "ColorDiffuse": { "r": 0.713235259, "g": 0.713235259, "b": 0.713235259 },
+                "LayoutGroupSortIndex": 0,
+                "Value": 0,
+                "Locked": false,
+                "Grid": true,
+                "Snap": true,
+                "IgnoreFoW": false,
+                "MeasureMovement": false,
+                "DragSelectable": true,
+                "Autoraise": true,
+                "Sticky": true,
+                "Tooltip": true,
+                "GridProjection": false,
+                "HideWhenFaceDown": true,
+                "Hands": true,
+                "CardID": (ids + i) * 100,
+                "SidewaysCard": false,
+                "CustomDeck": {
+                    [ids + i]: temporaryDeckcode
+                },
+                "LuaScript": "",
+                "LuaScriptState": "",
+                "XmlUI": ""
+            };
+            deckids.push((ids + i) * 100);
+            deck.push(temporaryCardcode);
+        });
+
+        deck.forEach((item, index) => {
+            ttsdeckData.ObjectStates[0].CustomDeck[ids + index] = item;
+        });
+
+        ttsdeckData.ObjectStates[0].DeckIDs = deckids;
+        ttsdeckData.ObjectStates[0].ContainedObjects = deck;
+
+        downloadJsonFile(ttsdeckData, 'deck.json');
+    } catch (error) {
+        console.error('Error processing files:', error);
+        alert('An error occurred while processing the files.');
+    }
+});
     </script>
 </body>
 </html>
