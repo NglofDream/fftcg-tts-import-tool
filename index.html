@@ -30,10 +30,8 @@
         }
 
         function extractDeckId(input) {
-            const urlPattern = /deck_id=([a-zA-Z0-9]+)/;
-            const match = input.match(urlPattern);
-            if (match) {
-                return match[1];
+            if (input.includes("/")) {
+                return input.split("/").pop();
             }
             return input;
         }
@@ -155,7 +153,7 @@
                 .catch(error => {
                     console.error('There was a problem with the fetch operation:', error);
                     const pre = document.getElementById('deck-data');
-                    pre.textContent = 'Failed to load data. Please check the Deck ID.';
+                    pre.textContent = 'Failed to load data. Please check the Deck ID / URL.';
                 });
         });
     </script>
