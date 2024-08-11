@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JSON Processing</title>
+    <title>Import tool</title>
 </head>
 <body>
-    <label for="deckId">Enter Deck ID / Website link:</label>
-    <input type="text" id="deckId">
+    <label for="deckId">Enter Deck ID or URL:</label>
+    <input type="text" id="deckId" placeholder="Enter deck ID or URL">
     <button id="fetchButton">Download Deck</button>
 
     <h2>Deck Data:</h2>
-    <pre id="deck-data">Please enter a Deck ID and click "Download Deck".</pre>
+    <pre id="deck-data">Please enter a Deck ID or URL and click "Download Deck".</pre>
 
     <script>
         async function fetchJSON(url) {
@@ -27,6 +27,15 @@
             a.download = filename;
             a.click();
             URL.revokeObjectURL(url);
+        }
+
+        function extractDeckId(input) {
+            const urlPattern = /deck_id=([a-zA-Z0-9]+)/;
+            const match = input.match(urlPattern);
+            if (match) {
+                return match[1];
+            }
+            return input;
         }
 
         async function processData(deckData) {
@@ -125,7 +134,10 @@
         }
 
         document.getElementById('fetchButton').addEventListener('click', () => {
-            const deckId = document.getElementById('deckId').value;
+            let deckId = document.getElementById('deckId').value;
+
+            deckId = extractDeckId(deckId);
+
             const url = `https://ffdecks.com/api/deck?deck_id=${deckId}`;
 
             fetch(url)
