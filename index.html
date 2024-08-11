@@ -41,11 +41,6 @@
                 let rarity = "";
                 let newDataList = [];
 
-                function getFirstAlphaChar(str) {
-                    const match = str.match(/[a-zA-Z]/);
-                    return match ? match[0] : '';
-                }
-        
                 function customKey(card) {
                     let serial_number = card.serial_number;
                     if (serial_number.startsWith("PR-")) {
@@ -60,13 +55,19 @@
                 }
 
                 dataList.forEach(item => {
+                    const [serialNumber1, serialNumber2] = item.serial_number.split('-');
+                    
+                    const formattedSerialNumber1 = /^\d$/.test(serialNumber1) ? `0${serialNumber1}` : serialNumber1;
+                    
+                    rarity = item.rarity === "Promo" ? "" : item.rarity;
+                    
                     newDataList.push({
                         Nickname: item.name,
-                        FaceURL: startUrl + item.serial_number.split('-')[0] + "/" + item.serial_number.split('-')[1] +  getFirstAlphaChar(rarity) + endUrl,
+                        FaceURL: startUrl + formattedSerialNumber1 + "/" + item.serial_number + rarity + endUrl,
                         Description: item.abilities ? item.abilities.join(', ') : ""
                     });
-
                 });
+
 
                 let deck = [];
                 let deckIds = [];
