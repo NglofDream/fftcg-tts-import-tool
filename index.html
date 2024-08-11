@@ -6,13 +6,15 @@
     <title>Import tool</title>
 </head>
 <body>
-    <label for="deckId">Enter Deck ID or URL:</label>
-    <input type="text" id="deckId" placeholder="Enter deck ID or URL">
-    <button id="fetchButton">Download Deck</button>
 
     <h2>Deck Data:</h2>
     <pre id="deck-data">Please enter a Deck ID or URL and click "Download Deck".</pre>
 
+
+    <label for="deckId">Enter Deck ID or URL:</label>
+    <input type="text" id="deckId" placeholder="Enter deck ID or URL">
+    <button id="fetchButton">Download Deck</button>
+    
     <script>
         async function fetchJSON(url) {
             const response = await fetch(url);
