@@ -1,9 +1,17 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Manipulation</title>
+</head>
 <body>
+    <input type="file" id="existingFile" accept=".json">
+    <input type="file" id="templateFile" accept=".json">
+    <input type="file" id="ttsdeckFile" accept=".json">
+    <button id="processFiles">Process Files</button>
+    <a id="downloadLink" style="display:none;">Download Processed JSON</a>
 
-<h1>My First Heading</h1>
-<p>My first paragraph.</p>
-
+    <script src="script.js"></script>
 </body>
-</html> 
+</html>
