@@ -59,7 +59,7 @@
                     
                     const formattedSerialNumber1 = /^\d$/.test(serialNumber1) ? `0${serialNumber1}` : serialNumber1;
                     
-                    rarity = item.rarity === "Promo" ? "" : item.rarity;
+                    rarity = item.rarity === "Promo" ? "" : item.rarity.charAt(0);
                     
                     newDataList.push({
                         Nickname: item.name,
@@ -67,6 +67,7 @@
                         Description: item.abilities ? item.abilities.join(', ') : ""
                     });
                 });
+
 
 
                 let deck = [];
