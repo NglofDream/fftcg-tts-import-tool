@@ -14,6 +14,110 @@
     <pre id="deck-data">Please enter a Deck ID and click "Fetch Deck Data".</pre>
 
     <script>
+        async function fetchJSON(url) {
+            const response = await fetch(url);
+            return response.json();
+        }
+
+        function saveJSON(data, filename) {
+            const blob = new Blob([JSON.stringify(data, null, 4)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        async function processData(existingFileUrl) {
+            try {
+                const githubBaseUrl = 'https://raw.githubusercontent.com/nglofdream/test/main/';
+                const templateFileUrl = `${githubBaseUrl}template.json`;
+                const ttsdeckFileUrl = `${githubBaseUrl}ttsdeck.json`;
+
+                const existingData = await fetchJSON(existingFileUrl);
+                const templateData = await fetchJSON(templateFileUrl);
+                const ttsdeckData = await fetchJSON(ttsdeckFileUrl);
+
+                let dataList = existingData.cards || [];
+                let newDataList = [];
+
+                dataList.forEach(item => {
+                    const [serialNumber1, serialNumber2] = item.serial_number.split('-');
+                    const formattedSerialNumber1 = /^\d$/.test(serialNumber1) ? `0${serialNumber1}` : serialNumber1;
+                    const rarity = item.rarity === "Promo" ? "" : item.rarity.charAt(0);
+
+                    newDataList.push({
+                        Nickname: item.name,
+                        FaceURL: item.image,
+                        Description: item.abilities ? item.abilities.join(', ') : ""
+                    });
+                });
+
+                let deck = [];
+                let deckIds = [];
+                let tempData = [];
+                let ids = 554;
+
+                newDataList.forEach((item, i) => {
+                    let temporaryDeckCode = {
+                        FaceURL: item.FaceURL,
+                        BackURL: "http://cloud-3.steamusercontent.com/ugc/948455238665576576/85063172B8C340602E8D6C783A457122F53F7843/",
+                        NumWidth: 1,
+                        NumHeight: 1,
+                        BackIsHidden: "true",
+                        UniqueBack: "false",
+                        Type: 0
+                    };
+
+                    tempData.push(temporaryDeckCode);
+
+                    let temporaryCardCode = {
+                        Name: "CardCustom",
+                        Transform: {
+                            posX: 42.494194,
+                            posY: 0.989706635,
+                            posZ: 10.5498743,
+                            rotX: 359.7435,
+                            rotY: 179.999451,
+                            rotZ: -0.00222716271,
+                            scaleX: 2.17791772,
+                            scaleY: 1.0,
+                            scaleZ: 2.17791772
+                        },
+                        Nickname: item.Nickname,
+                        Description: item.Description,
+                        CardID: (ids + i) * 100,
+                        CustomDeck: {
+                            [ids + i]: {
+                                FaceURL: item.FaceURL,
+                                BackURL: "http://cloud-3.steamusercontent.com/ugc/948455238665576576/85063172B8C340602E8D6C783A457122F53F7843/",
+                                NumWidth: 1,
+                                NumHeight: 1,
+                                BackIsHidden: "true",
+                                UniqueBack: "false",
+                                Type: 0
+                            }
+                        }
+                    };
+
+                    deckIds.push((ids + i) * 100);
+                    deck.push(temporaryCardCode);
+                });
+
+                tempData.forEach((item, index) => {
+                    ttsdeckData.ObjectStates[0].CustomDeck[ids + index] = item;
+                });
+
+                ttsdeckData.ObjectStates[0].DeckIDs = deckIds;
+                ttsdeckData.ObjectStates[0].ContainedObjects = deck;
+
+                saveJSON(ttsdeckData, 'deck.json');
+            } catch (error) {
+                console.error('Error processing data:', error);
+            }
+        }
+
         document.getElementById('fetchButton').addEventListener('click', () => {
             const deckId = document.getElementById('deckId').value;
             const url = `https://ffdecks.com/api/deck?deck_id=${deckId}`;
@@ -27,165 +131,9 @@
                 })
                 .then(data => {
                     const pre = document.getElementById('deck-data');
+                    pre.textContent = JSON.stringify(data, null, 2); // Display deck data
 
-
-
-
-                    
-        
-                async function fetchJSON(url) {
-                    const response = await fetch(url);
-                    return response.json();
-                }
-        
-                function saveJSON(data, filename) {
-                    const blob = new Blob([JSON.stringify(data, null, 4)], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = filename;
-                    a.click();
-                    URL.revokeObjectURL(url);
-                }
-        
-                async function processData() {
-                    try {
-                        const githubBaseUrl = 'https://raw.githubusercontent.com/nglofdream/test/main/';
-                    
-                        const existingFileUrl = pre.textContent;  //`${githubBaseUrl}data.json`;
-                        const templateFileUrl = `${githubBaseUrl}template.json`;
-                        const ttsdeckFileUrl = `${githubBaseUrl}ttsdeck.json`;
-                    
-                        const existingData = await fetchJSON(existingFileUrl);
-                        const templateData = await fetchJSON(templateFileUrl);
-                        const ttsdeckData = await fetchJSON(ttsdeckFileUrl);
-        
-                        let dataList = existingData.cards || [];
-                        let templateList = templateData.ObjectStates || [];
-                        let rarity = "";
-                        let newDataList = [];
-        
-                        function customKey(card) {
-                            let serial_number = card.serial_number;
-                            if (serial_number.startsWith("PR-")) {
-                                serial_number = "99" + serial_number.slice(2); // Change "PR-" to "99-"
-                            }
-                            if (serial_number.includes('-')) {
-                                const [prefix, number] = serial_number.split('-');
-                                return [parseInt(prefix), parseInt(number)];
-                            } else {
-                                return [Infinity, parseInt(serial_number)]; // In case there's no prefix, put it at the end
-                            }
-                        }
-        
-                        dataList.forEach(item => {
-                            const [serialNumber1, serialNumber2] = item.serial_number.split('-');
-                            
-                            const formattedSerialNumber1 = /^\d$/.test(serialNumber1) ? `0${serialNumber1}` : serialNumber1;
-                            
-                            rarity = item.rarity === "Promo" ? "" : item.rarity.charAt(0);
-                            
-                            newDataList.push({
-                                Nickname: item.name,
-                                FaceURL: item.image,
-                                Description: item.abilities ? item.abilities.join(', ') : ""
-                            });
-                        });
-        
-        
-        
-                        let deck = [];
-                        let deckIds = [];
-                        let tempData = [];
-                        let ids = 554;
-        
-                        newDataList.forEach((item, i) => {
-                            let temporaryDeckCode = {
-                                FaceURL: item.FaceURL,
-                                BackURL: "http://cloud-3.steamusercontent.com/ugc/948455238665576576/85063172B8C340602E8D6C783A457122F53F7843/",
-                                NumWidth: 1,
-                                NumHeight: 1,
-                                BackIsHidden: "true",
-                                UniqueBack: "false",
-                                Type: 0
-                            };
-        
-                            tempData.push(temporaryDeckCode);
-        
-                            let temporaryCardCode = {
-                                Name: "CardCustom",
-                                Transform: {
-                                    posX: 42.494194,
-                                    posY: 0.989706635,
-                                    posZ: 10.5498743,
-                                    rotX: 359.7435,
-                                    rotY: 179.999451,
-                                    rotZ: -0.00222716271,
-                                    scaleX: 2.17791772,
-                                    scaleY: 1.0,
-                                    scaleZ: 2.17791772
-                                },
-                                Nickname: item.Nickname,
-                                Description: item.Description,
-                                GMNotes: "",
-                                AltLookAngle: { x: 0, y: 0, z: 0 },
-                                ColorDiffuse: { r: 0.713235259, g: 0.713235259, b: 0.713235259 },
-                                LayoutGroupSortIndex: 0,
-                                Value: 0,
-                                Locked: "false",
-                                Grid: "true",
-                                Snap: "true",
-                                IgnoreFoW: "false",
-                                MeasureMovement: "false",
-                                DragSelectable: "true",
-                                Autoraise: "true",
-                                Sticky: "true",
-                                Tooltip: "true",
-                                GridProjection: "false",
-                                HideWhenFaceDown: "true",
-                                Hands: "true",
-                                CardID: (ids + i) * 100,
-                                SidewaysCard: "false",
-                                CustomDeck: {
-                                    [ids + i]: {
-                                        FaceURL: item.FaceURL,
-                                        BackURL: "http://cloud-3.steamusercontent.com/ugc/948455238665576576/85063172B8C340602E8D6C783A457122F53F7843/",
-                                        NumWidth: 1,
-                                        NumHeight: 1,
-                                        BackIsHidden: "true",
-                                        UniqueBack: "false",
-                                        Type: 0
-                                    }
-                                },
-                                LuaScript: "",
-                                LuaScriptState: "",
-                                XmlUI: ""
-                            };
-        
-                            deckIds.push((ids + i) * 100);
-                            deck.push(temporaryCardCode);
-                        });
-        
-                        tempData.forEach((item, index) => {
-                            ttsdeckData.ObjectStates[0].CustomDeck[ids + index] = item;
-                        });
-        
-                        ttsdeckData.ObjectStates[0].DeckIDs = deckIds;
-                        ttsdeckData.ObjectStates[0].ContainedObjects = deck;
-        
-                        saveJSON(ttsdeckData, 'deck.json');
-                    } catch (error) {
-                        console.error('Error processing data:', error);
-                    }
-                }
-                            
-
-                    
-
-
-                    
-                    
-                    pre.textContent = JSON.stringify(data, null, 2); // Format JSON nicely
+                    processData(url); // Process the data and save the JSON file
                 })
                 .catch(error => {
                     console.error('There was a problem with the fetch operation:', error);
@@ -193,8 +141,6 @@
                     pre.textContent = 'Failed to load data. Please check the Deck ID.';
                 });
         });
-
-
     </script>
 </body>
 </html>
