@@ -16,7 +16,7 @@
     <script>
         document.getElementById('fetchButton').addEventListener('click', () => {
             const deckId = document.getElementById('deckId').value;
-            const url = `https://mycardgame.com/api/deck?deck_id=${deckId}`;
+            const url = `https://ffdecks.com/api/deck?deck_id=${deckId}`;
 
             fetch(url)
                 .then(response => {
