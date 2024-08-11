@@ -45,19 +45,24 @@
                     const match = str.match(/[a-zA-Z]/);
                     return match ? match[0] : '';
                 }
+        
+                function customKey(card) {
+                    let serial_number = card.serial_number;
+                    if (serial_number.startsWith("PR-")) {
+                        serial_number = "99" + serial_number.slice(2); // Change "PR-" to "99-"
+                    }
+                    if (serial_number.includes('-')) {
+                        const [prefix, number] = serial_number.split('-');
+                        return [parseInt(prefix), parseInt(number)];
+                    } else {
+                        return [Infinity, parseInt(serial_number)]; // In case there's no prefix, put it at the end
+                    }
+                }
 
-                
                 dataList.forEach(item => {
-                    rarity = item.rarity === "Promo" ? "" : item.rarity;
                     newDataList.push({
                         Nickname: item.name,
-                        FaceURL: startUrl + "/" + item.opus + "/" + item.serial_number + rarity.charAt(0) + endUrl,
-                        Description: item.abilities ? item.abilities.join(', ') : ""
-                    });
-
-                    newDataList.push({
-                        Nickname: item.name,
-                        FaceURL: startUrl + "/" +  item.serial_number.split('-')[0] + "/" + item.serial_number.split('-')[1] +  getFirstAlphaChar(rarity) + endUrl,
+                        FaceURL: startUrl + item.serial_number.split('-')[0] + "/" + item.serial_number.split('-')[1] +  getFirstAlphaChar(rarity) + endUrl,
                         Description: item.abilities ? item.abilities.join(', ') : ""
                     });
 
