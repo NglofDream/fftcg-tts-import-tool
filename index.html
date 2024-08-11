@@ -6,7 +6,44 @@
     <title>JSON Processing</title>
 </head>
 <body>
+    <label for="deckId">Enter Deck ID:</label>
+    <input type="text" id="deckId" placeholder="Enter deck ID">
+    <button id="fetchButton">Fetch Deck Data</button>
+
+    <h2>Deck Data:</h2>
+    <pre id="deck-data">Please enter a Deck ID and click "Fetch Deck Data".</pre>
+
     <script>
+        document.getElementById('fetchButton').addEventListener('click', () => {
+            const deckId = document.getElementById('deckId').value;
+            const url = `https://mycardgame.com/api/deck?deck_id=${deckId}`;
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const pre = document.getElementById('deck-data');
+                    pre.textContent = JSON.stringify(data, null, 2); // Format JSON nicely
+                })
+                .catch(error => {
+                    console.error('There was a problem with the fetch operation:', error);
+                    const pre = document.getElementById('deck-data');
+                    pre.textContent = 'Failed to load data. Please check the Deck ID.';
+                });
+        });
+
+
+
+
+
+
+
+
+
         async function fetchJSON(url) {
             const response = await fetch(url);
             return response.json();
