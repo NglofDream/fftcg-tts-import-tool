@@ -35,8 +35,8 @@
                 const templateFileUrl = `${githubBaseUrl}template.json`;
                 const ttsdeckFileUrl = `${githubBaseUrl}ttsdeck.json`;
 
-                // Only keep the "cards" data from the fetched deck data
-                const dataList = deckData.cards || [];
+                // Access the "card" object inside each "cards" array item
+                const dataList = deckData.cards.map(item => item.card) || [];
                 const templateData = await fetchJSON(templateFileUrl);
                 const ttsdeckData = await fetchJSON(ttsdeckFileUrl);
 
@@ -133,10 +133,10 @@
                     const pre = document.getElementById('deck-data');
 
                     // Remove everything before "cards"
-                    const cardsData = { cards: data.cards };
-                    //pre.textContent = JSON.stringify(cardsData, null, 2); // Display only the cards data
+                    const cardsData = { cards: data.cards.map(item => item.card) };
+                    pre.textContent = JSON.stringify(cardsData, null, 2); // Display only the cards data
 
-                    processData(cardsData); // Process the "cards" data
+                    processData(data); // Process the deck data, focusing on "card" objects
                 })
                 .catch(error => {
                     console.error('There was a problem with the fetch operation:', error);
