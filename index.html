@@ -9,7 +9,6 @@
     <h1>JSON File Processor</h1>
     <p>Process JSON files from your GitHub project.</p>
     <button id="processFiles">Process Files</button>
-    <a id="downloadLink" style="display:none;">Download Processed JSON</a>
 
     <script>
         const githubBaseUrl = 'https://raw.githubusercontent.com/nglofdream/test/main/';
@@ -144,17 +143,6 @@
                 throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
             }
             return response.json();
-        }
-
-        function downloadJsonFile(content, filename) {
-            const blob = new Blob([content], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const link = document.getElementById('downloadLink');
-            link.href = url;
-            link.download = filename;
-            link.style.display = 'block';
-            link.click();
-            URL.revokeObjectURL(url);
         }
     </script>
 </body>
