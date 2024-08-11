@@ -1,0 +1,14 @@
+{
+    "menuitem":[
+        {
+            "value":"New"
+        },
+        {
+            "value":"Open"
+        },
+        {
+            "value":"Close"
+        }
+    ]
+
+}
