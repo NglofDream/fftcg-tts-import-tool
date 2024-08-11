@@ -36,7 +36,13 @@
                 const ttsdeckFileUrl = `${githubBaseUrl}ttsdeck.json`;
 
                 // Access the "card" object inside each "cards" array item
-                const dataList = deckData.cards.map(item => item.card) || [];
+                const dataList = [];
+                deckData.cards.forEach(item => {
+                    for (let i = 0; i < item.quantity; i++) {
+                        dataList.push(item.card);
+                    }
+                });
+
                 const templateData = await fetchJSON(templateFileUrl);
                 const ttsdeckData = await fetchJSON(ttsdeckFileUrl);
 
