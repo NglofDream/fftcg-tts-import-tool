@@ -12,152 +12,154 @@
     <a id="downloadLink" style="display:none;">Download Processed JSON</a>
 
     <script>
+async function readJsonFile(url) {
+    const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
+    }
+    return await response.json();
+}
+
+function createJsonFile(data, filename) {
+    const jsonContent = JSON.stringify(data, null, 4);
+    downloadJsonFile(jsonContent, filename);
+}
+
+function customKey(card) {
+    let serial_number = card.serial_number;
+    if (serial_number.startsWith("PR-")) {
+        serial_number = "99" + serial_number.slice(2);
+    }
+
+    if (serial_number.includes('-')) {
+        const [prefix, number] = serial_number.split('-');
+        return [parseInt(prefix), parseInt(number)];
+    } else {
+        return [Infinity, parseInt(serial_number)];
+    }
+}
+
+function downloadJsonFile(content, filename) {
+    const blob = new Blob([content], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.getElementById('downloadLink');
+    link.href = url;
+    link.download = filename;
+    link.style.display = 'block';
+    link.click();
+    URL.revokeObjectURL(url);
+}
+
+document.getElementById('processFiles').addEventListener('click', async () => {
+    try {
         const githubBaseUrl = 'https://raw.githubusercontent.com/nglofdream/test/main/';
 
         const existingFileUrl = `${githubBaseUrl}data.json`;
         const templateFileUrl = `${githubBaseUrl}template.json`;
         const ttsdeckFileUrl = `${githubBaseUrl}ttsdeck.json`;
 
-        async function readJsonFile(url) {
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
+        const existingData = await readJsonFile(existingFileUrl);
+        const templateData = await readJsonFile(templateFileUrl);
+        const ttsdeckData = await readJsonFile(ttsdeckFileUrl);
+
+        const dataList = existingData.cards || [];
+        const templateList = templateData.ObjectStates || [];
+
+        const sortedCards = dataList.sort(customKey);
+        existingData.cards = sortedCards;
+
+        const startUrl = "https://storage.googleapis.com/ffdecks-card-images/";
+        const endUrl = "_eg.jpg";
+        const new_data_list = [];
+
+        sortedCards.forEach(item => {
+            let rarity = item.rarity || "";
+            if (rarity === "Promo") {
+                rarity = "";
             }
-            return await response.json();
-        }
 
-        function createJsonFile(data, filename) {
-            const jsonContent = JSON.stringify(data, null, 4);
-            downloadJsonFile(jsonContent, filename);
-        }
-
-        function customKey(card) {
-            let serial_number = card.serial_number;
-            if (serial_number.startsWith("PR-")) {
-                serial_number = "99" + serial_number.slice(2);
-            }
-
-            if (serial_number.includes('-')) {
-                const [prefix, number] = serial_number.split('-');
-                return [parseInt(prefix), parseInt(number)];
-            } else {
-                return [Infinity, parseInt(serial_number)];
-            }
-        }
-
-        function downloadJsonFile(content, filename) {
-            const blob = new Blob([content], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const link = document.getElementById('downloadLink');
-            link.href = url;
-            link.download = filename;
-            link.style.display = 'block';
-            link.click();
-            URL.revokeObjectURL(url);
-        }
-
-        document.getElementById('processFiles').addEventListener('click', async () => {
-            try {
-                const existingData = await readJsonFile(existingFileUrl);
-                const templateData = await readJsonFile(templateFileUrl);
-                const ttsdeckData = await readJsonFile(ttsdeckFileUrl);
-
-                if (!existingData.cards || !templateData.ObjectStates || !ttsdeckData.ObjectStates) {
-                    throw new Error('One or more of the required JSON structures are missing.');
-                }
-
-                const dataList = existingData.cards || [];
-                const startUrl = "https://storage.googleapis.com/ffdecks-card-images/";
-                const endUrl = "_eg.jpg";
-                const new_data_list = [];
-
-                dataList.forEach(item => {
-                    let rarity = item.rarity || "";
-                    if (rarity === "Promo") {
-                        rarity = "";
-                    }
-
-                    const newItem = {
-                        "Nickname": item.name,
-                        "FaceURL": `${startUrl}${item.serial_number}${rarity.charAt(0)}${endUrl}`,
-                        "Description": item.abilities ? item.abilities.join(', ') : ''
-                    };
-                    new_data_list.push(newItem);
-                });
-
-                const deck = [];
-                const deckids = [];
-                const ids = 554;
-
-                new_data_list.forEach((item, i) => {
-                    const temporaryDeckcode = {
-                        "FaceURL": item.FaceURL,
-                        "BackURL": "http://cloud-3.steamusercontent.com/ugc/948455238665576576/85063172B8C340602E8D6C783A457122F53F7843/",
-                        "NumWidth": 1,
-                        "NumHeight": 1,
-                        "BackIsHidden": "true",
-                        "UniqueBack": "false",
-                        "Type": 0
-                    };
-
-                    const temporaryCardcode = {
-                        "Name": "CardCustom",
-                        "Transform": {
-                            "posX": 42.494194,
-                            "posY": 0.989706635,
-                            "posZ": 10.5498743,
-                            "rotX": 359.7435,
-                            "rotY": 179.999451,
-                            "rotZ": -0.00222716271,
-                            "scaleX": 2.17791772,
-                            "scaleY": 1.0,
-                            "scaleZ": 2.17791772
-                        },
-                        "Nickname": item.Nickname,
-                        "Description": item.Description,
-                        "GMNotes": "",
-                        "AltLookAngle": { "x": 0.0, "y": 0.0, "z": 0.0 },
-                        "ColorDiffuse": { "r": 0.713235259, "g": 0.713235259, "b": 0.713235259 },
-                        "LayoutGroupSortIndex": 0,
-                        "Value": 0,
-                        "Locked": "false",
-                        "Grid": "true",
-                        "Snap": "true",
-                        "IgnoreFoW": "false",
-                        "MeasureMovement": "false",
-                        "DragSelectable": "true",
-                        "Autoraise": "true",
-                        "Sticky": "true",
-                        "Tooltip": "true",
-                        "GridProjection": "false",
-                        "HideWhenFaceDown": "true",
-                        "Hands": "true",
-                        "CardID": (ids + i) * 100,
-                        "SidewaysCard": "false",
-                        "CustomDeck": {
-                            [ids + i]: temporaryDeckcode
-                        },
-                        "LuaScript": "",
-                        "LuaScriptState": "",
-                        "XmlUI": ""
-                    };
-                    deckids.push((ids + i) * 100);
-                    deck.push(temporaryCardcode);
-                });
-
-                ttsdeckData.ObjectStates[0].CustomDeck = deck.reduce((acc, item, index) => {
-                    acc[ids + index] = item;
-                    return acc;
-                }, {});
-                ttsdeckData.ObjectStates[0].DeckIDs = deckids;
-                ttsdeckData.ObjectStates[0].ContainedObjects = deck;
-
-                createJsonFile(ttsdeckData, "deck.json");
-            } catch (error) {
-                console.error('Error processing files:', error);
-                alert('An error occurred while processing the files.');
-            }
+            const newItem = {
+                "Nickname": item.name,
+                "FaceURL": `${startUrl}${item.serial_number}${rarity.charAt(0)}${endUrl}`,
+                "Description": item.abilities ? item.abilities.join(', ') : ''
+            };
+            new_data_list.push(newItem);
         });
+
+        const deck = [];
+        const deckids = [];
+        const ids = 554;
+
+        new_data_list.forEach((item, i) => {
+            const temporaryDeckcode = {
+                "FaceURL": item.FaceURL,
+                "BackURL": "http://cloud-3.steamusercontent.com/ugc/948455238665576576/85063172B8C340602E8D6C783A457122F53F7843/",
+                "NumWidth": 1,
+                "NumHeight": 1,
+                "BackIsHidden": "true",
+                "UniqueBack": "false",
+                "Type": 0
+            };
+
+            const temporaryCardcode = {
+                "Name": "CardCustom",
+                "Transform": {
+                    "posX": 42.494194,
+                    "posY": 0.989706635,
+                    "posZ": 10.5498743,
+                    "rotX": 359.7435,
+                    "rotY": 179.999451,
+                    "rotZ": -0.00222716271,
+                    "scaleX": 2.17791772,
+                    "scaleY": 1.0,
+                    "scaleZ": 2.17791772
+                },
+                "Nickname": item.Nickname,
+                "Description": item.Description,
+                "GMNotes": "",
+                "AltLookAngle": { "x": 0.0, "y": 0.0, "z": 0.0 },
+                "ColorDiffuse": { "r": 0.713235259, "g": 0.713235259, "b": 0.713235259 },
+                "LayoutGroupSortIndex": 0,
+                "Value": 0,
+                "Locked": "false",
+                "Grid": "true",
+                "Snap": "true",
+                "IgnoreFoW": "false",
+                "MeasureMovement": "false",
+                "DragSelectable": "true",
+                "Autoraise": "true",
+                "Sticky": "true",
+                "Tooltip": "true",
+                "GridProjection": "false",
+                "HideWhenFaceDown": "true",
+                "Hands": "true",
+                "CardID": (ids + i) * 100,
+                "SidewaysCard": "false",
+                "CustomDeck": {
+                    [ids + i]: temporaryDeckcode
+                },
+                "LuaScript": "",
+                "LuaScriptState": "",
+                "XmlUI": ""
+            };
+            deckids.push((ids + i) * 100);
+            deck.push(temporaryCardcode);
+        });
+
+        deck.forEach((item, index) => {
+            ttsdeckData.ObjectStates[0].CustomDeck[ids + index] = item;
+        });
+
+        ttsdeckData.ObjectStates[0].DeckIDs = deckids;
+        ttsdeckData.ObjectStates[0].ContainedObjects = deck;
+
+        createJsonFile(ttsdeckData, "deck.json");
+    } catch (error) {
+        console.error('Error processing files:', error);
+        alert('An error occurred while processing the files.');
+    }
+});
+
     </script>
 </body>
 </html>
