@@ -43,13 +43,9 @@
                 const templateFileUrl = `${githubBaseUrl}template.json`;
                 const ttsdeckFileUrl = `${githubBaseUrl}ttsdeck.json`;
             
-                const existingData = await readJsonFile(existingFileUrl);
-                const templateData = await readJsonFile(templateFileUrl);
-                const ttsdeckData = await readJsonFile(ttsdeckFileUrl);
-                
-                //const existingData = await fetchJSON('data.json');
-                //const templateData = await fetchJSON('template.json');
-                //const ttsdeckData = await fetchJSON('ttsdeck.json');
+                const existingData = await fetchJSON(existingFileUrl);
+                const templateData = await fetchJSON(templateFileUrl);
+                const ttsdeckData = await fetchJSON(ttsdeckFileUrl);
 
                 let dataList = existingData.cards || [];
                 let templateList = templateData.ObjectStates || [];
