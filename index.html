@@ -10,7 +10,6 @@
     <p>Process JSON files from your GitHub project.</p>
     <button id="processFiles">Process Files</button>
     <a id="downloadLink" style="display:none;">Download Processed JSON</a>
-        const githubBaseUrl = 'https://raw.githubusercontent.com/nglofdream/test/main/';
 
     <script>
 async function readJsonFile(url) {
@@ -53,7 +52,9 @@ function downloadJsonFile(content, filename) {
 
 document.getElementById('processFiles').addEventListener('click', async () => {
     try {
-        const existingFileUrl = `${githubBaseUrl}existing.json`;
+        const githubBaseUrl = 'https://raw.githubusercontent.com/nglofdream/test/main/';
+
+        const existingFileUrl = `${githubBaseUrl}data.json`;
         const templateFileUrl = `${githubBaseUrl}template.json`;
         const ttsdeckFileUrl = `${githubBaseUrl}ttsdeck.json`;
 
